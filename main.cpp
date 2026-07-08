@@ -2,7 +2,7 @@
 #include <string>
 #include <queue>   
 #include <vector>  
-#include <unordered_map> // NEW DAY 4: Required for Graph Adjacency List
+#include <unordered_map> // DAY 4: Required for Graph Adjacency List
 #include "sqlite3.h"
 
 using namespace std;
@@ -14,26 +14,26 @@ using namespace std;
 // This class represents our entire city map using an Adjacency List
 class CityMap {
 public:
-    // The Graph: Maps a Node ID to a list of its neighbors (Neighbor ID, Travel Time in mins)
+    // The Graph: Maps a Node ID (Intersection) to a list of its neighbors.
+    // Each neighbor is stored as a C++ 'pair' containing: {Neighbor Node ID, Travel Time in minutes}
     unordered_map<int, vector<pair<int, int>>> adjacency_list;
 
-    // Function to build the roads
+    // Function to add a bidirectional road between two intersections
     void addRoad(int source, int destination, int travel_time_mins) {
-        // We are assuming 2-way streets for now, so we connect them both ways
         adjacency_list[source].push_back({destination, travel_time_mins});
         adjacency_list[destination].push_back({source, travel_time_mins});
     }
 
-    // Function to print the graph and prove it works
+    // Function to print the graph structure to the terminal
     void displayNetwork() {
-        cout << "\n--- CURRENT CITY ROAD NETWORK ---" << endl;
+        cout << "\n--- CURRENT CITY ROAD NETWORK (ADJACENCY LIST) ---" << endl;
         for (auto const& intersection : adjacency_list) {
-            cout << "Intersection " << intersection.first << " connects to: ";
+            cout << "Intersection [" << intersection.first << "] connects to: " << endl;
             for (auto const& neighbor : intersection.second) {
-                cout << "[Node " << neighbor.first << " (" << neighbor.second << " mins)] ";
+                cout << "  -> Go to Node [" << neighbor.first << "] takes " << neighbor.second << " mins" << endl;
             }
-            cout << endl;
         }
+        cout << "--------------------------------------------------" << endl;
     }
 };
 
@@ -44,7 +44,7 @@ public:
 struct Location {
     int x;
     int y;
-    int node_id; // We will soon use this to snap emergencies to Graph Intersections!
+    int node_id; // Connects our objects directly to our new Graph Nodes
 };
 
 class Ambulance {
@@ -65,13 +65,14 @@ struct Emergency {
     int severity; 
     Location emergency_location;
 
+    // Operator Overloading for Max-Heap Triage Sorting
     bool operator<(const Emergency& other) const {
         return severity < other.severity;
     }
 };
 
 // ==========================================
-// DAY 1: DATABASE ENGINE 
+// DAY 1: DATABASE ENGINE
 // ==========================================
 
 void executeSQL(sqlite3* db, const string& sqlCommand, const string& successMessage) {
@@ -105,17 +106,17 @@ int main() {
     cout << "--- BOOTING EMERGENCY DISPATCH CORE ---" << endl;
     initializeDatabase();
     
-    // --- DAY 4: GRAPH NETWORK TESTING ---
-    CityMap tokyo_district;
+    // --- DAY 4: GRAPH NETWORK INITIALIZATION ---
+    CityMap city_grid;
 
-    // Building a small 4-intersection grid
-    tokyo_district.addRoad(1, 2, 5);  // Node 1 to Node 2 takes 5 mins
-    tokyo_district.addRoad(2, 3, 10); // Node 2 to Node 3 takes 10 mins
-    tokyo_district.addRoad(3, 4, 3);  // Node 3 to Node 4 takes 3 mins
-    tokyo_district.addRoad(4, 1, 8);  // Node 4 to Node 1 takes 8 mins
+    // Building a 4-intersection structural grid layout
+    city_grid.addRoad(1, 2, 5);  // Intersection 1 to 2 takes 5 minutes
+    city_grid.addRoad(2, 3, 10); // Intersection 2 to 3 takes 10 minutes
+    city_grid.addRoad(3, 4, 3);  // Intersection 3 to 4 takes 3 minutes
+    city_grid.addRoad(4, 1, 8);  // Intersection 4 to 1 takes 8 minutes
 
-    // Print the graph to the terminal
-    tokyo_district.displayNetwork();
+    // Print the memory representation of our graph
+    city_grid.displayNetwork();
 
     // --- DAY 3: MAX-HEAP TRIAGE ENGINE ---
     priority_queue<Emergency> triage_queue;
@@ -126,14 +127,14 @@ int main() {
     triage_queue.push(call2);
     triage_queue.push(call1);
 
-    cout << "\n--- DISPATCHING UNITS ---" << endl;
+    cout << "\n--- PROCESSING TRIAGE QUEUE ---" << endl;
     while (!triage_queue.empty()) {
         Emergency curr = triage_queue.top();
         triage_queue.pop();
-        cout << "[DISPATCH] Assigning ambulance to Call ID: " << curr.id 
-             << " | Severity: " << curr.severity << "/10 | Location Node: " << curr.emergency_location.node_id << endl;
+        cout << "[TRIAGE] Urgent processing for Call ID: " << curr.id 
+             << " | Medical Severity: " << curr.severity << "/10 | At City Intersection: " << curr.emergency_location.node_id << endl;
     }
 
-    cout << "\n--- SYSTEM READY ---" << endl;
+    cout << "\n--- SYSTEM test ---" << endl;
     return 0;
 }
