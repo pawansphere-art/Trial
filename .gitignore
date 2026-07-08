@@ -1,0 +1,6 @@
+sqlite3.o
+.vscode/
+dispatch_core.db
+dispatcher
+sqlite3.c 
+sqlite3.h
